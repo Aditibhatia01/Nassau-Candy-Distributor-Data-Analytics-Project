@@ -78,7 +78,7 @@ link for dashboard:
 
 link for summary:
 
-link for research paper:
+link for EDA research paper:https://github.com/Aditibhatia01/Nassau-Candy-Distributor-Data-Analytics-Project/blob/main/Nassau_Candy_EDA_Report%20(1).pdf
 
 Project Context
 This project was completed as part of a Data Analytics Internship (2025–2026).
