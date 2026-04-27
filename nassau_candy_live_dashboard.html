@@ -1,0 +1,478 @@
+
+<h2 class="sr-only">Nassau Candy Distributor live analytics dashboard showing sales, profit, regional and product performance from 2024–2025</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.dash { padding: 1rem 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px; }
+.topbar-left h1 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+.topbar-left p { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+.badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 500; background: var(--color-background-success); color: var(--color-text-success); }
+.tabs { display: flex; gap: 4px; background: var(--color-background-secondary); padding: 3px; border-radius: var(--border-radius-md); }
+.tab { font-size: 12px; padding: 5px 14px; border-radius: 6px; border: none; background: transparent; color: var(--color-text-secondary); cursor: pointer; font-family: var(--font-sans); transition: all 0.15s; }
+.tab.active { background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-tertiary); font-weight: 500; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+.kpi { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 14px 16px; }
+.kpi-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.kpi-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); line-height: 1; }
+.kpi-sub { font-size: 11px; margin-top: 4px; }
+.kpi-up { color: var(--color-text-success); }
+.kpi-down { color: var(--color-text-danger); }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.chart-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.chart-sub { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+.leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.bottom-row { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px; margin-bottom: 10px; }
+.table-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; overflow: hidden; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th { text-align: left; color: var(--color-text-secondary); font-weight: 500; padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 11px; }
+.tbl td { padding: 7px 8px; color: var(--color-text-primary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+.tbl tr:last-child td { border-bottom: none; }
+.pill { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 500; }
+.pill-green { background: var(--color-background-success); color: var(--color-text-success); }
+.pill-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+.pill-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
+.bar-mini { height: 5px; border-radius: 3px; background: var(--color-border-tertiary); overflow: hidden; margin-top: 3px; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.ticker { display: flex; gap: 8px; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 4px; }
+.tick-item { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 14px; white-space: nowrap; font-size: 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.tick-name { color: var(--color-text-secondary); }
+.tick-val { color: var(--color-text-primary); font-weight: 500; }
+.tick-chg { font-size: 11px; }
+.filter-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+.filter-row select { font-size: 12px; padding: 5px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-family: var(--font-sans); }
+.filter-label { font-size: 12px; color: var(--color-text-secondary); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.spark { display: flex; align-items: flex-end; gap: 2px; height: 32px; }
+.spark-bar { width: 6px; border-radius: 1px; flex-shrink: 0; }
+@media (max-width: 500px) {
+  .charts-row, .bottom-row { grid-template-columns: 1fr; }
+  .chart-card.full { grid-column: auto; }
+}
+</style>
+
+<div class="dash">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1><span class="live-dot"></span>Nassau Candy — analytics dashboard</h1>
+      <p>10,194 transactions · Jan 2024 – Dec 2025 · United States</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="badge">+44.6% YoY</span>
+      <div class="tabs">
+        <button class="tab active" onclick="setView('overview')">Overview</button>
+        <button class="tab" onclick="setView('products')">Products</button>
+        <button class="tab" onclick="setView('regions')">Regions</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="tick-item"><span class="tick-name">Wonka Scrumdiddly</span><span class="tick-val">$27,875</span><span class="tick-chg kpi-up">69.4% margin</span></div>
+    <div class="tick-item"><span class="tick-name">Triple Dazzle Caramel</span><span class="tick-val">$28,485</span><span class="tick-chg kpi-up">65.3% margin</span></div>
+    <div class="tick-item"><span class="tick-name">Milk Chocolate</span><span class="tick-val">$26,868</span><span class="tick-chg kpi-up">64.9% margin</span></div>
+    <div class="tick-item"><span class="tick-name">Kazookles</span><span class="tick-val">$1,206</span><span class="tick-chg kpi-down">7.7% margin</span></div>
+    <div class="tick-item"><span class="tick-name">Everlasting Gobstopper</span><span class="tick-val">$130</span><span class="tick-chg kpi-up">80.0% margin</span></div>
+    <div class="tick-item"><span class="tick-name">California</span><span class="tick-val">$27,917</span><span class="tick-chg kpi-up">#1 state</span></div>
+    <div class="tick-item"><span class="tick-name">Pacific region</span><span class="tick-val">$46,302</span><span class="tick-chg kpi-up">32.7% share</span></div>
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-label">Filter:</span>
+    <select onchange="filterRegion(this.value)">
+      <option value="all">All regions</option>
+      <option value="Pacific">Pacific</option>
+      <option value="Atlantic">Atlantic</option>
+      <option value="Interior">Interior</option>
+      <option value="Gulf">Gulf</option>
+    </select>
+    <select onchange="filterYear(this.value)">
+      <option value="all">All years</option>
+      <option value="2024">2024</option>
+      <option value="2025">2025</option>
+    </select>
+  </div>
+
+  <div class="kpi-grid" id="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total revenue</div><div class="kpi-value">$141,783</div><div class="kpi-sub kpi-up">+44.6% vs prior year</div></div>
+    <div class="kpi"><div class="kpi-label">Gross profit</div><div class="kpi-value">$93,443</div><div class="kpi-sub kpi-up">+44.9% vs prior year</div></div>
+    <div class="kpi"><div class="kpi-label">Avg margin</div><div class="kpi-value">66.5%</div><div class="kpi-sub kpi-up">Stable across all regions</div></div>
+    <div class="kpi"><div class="kpi-label">Units sold</div><div class="kpi-value">38,654</div><div class="kpi-sub kpi-up">+43.1% vs prior year</div></div>
+    <div class="kpi"><div class="kpi-label">Customers</div><div class="kpi-value">5,044</div><div class="kpi-sub" style="color:var(--color-text-secondary)">542 cities · 59 states</div></div>
+    <div class="kpi"><div class="kpi-label">Avg order value</div><div class="kpi-value">$16.58</div><div class="kpi-sub" style="color:var(--color-text-secondary)">Median $13.00</div></div>
+  </div>
+
+  <div id="view-overview">
+    <div class="charts-row">
+      <div class="chart-card full">
+        <div class="chart-title">Monthly sales revenue</div>
+        <div class="chart-sub">Jan 2024 – Dec 2025 · all regions</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>2024</span>
+          <span class="leg"><span class="leg-dot" style="background:#3266ad"></span>2025</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="c-monthly" role="img" aria-label="Monthly revenue chart 2024 to 2025">Monthly sales from Jan 2024 to Dec 2025 showing 44.6% annual growth.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Division split</div>
+        <div class="chart-sub">Revenue by division</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Chocolate 92.8%</span>
+          <span class="leg"><span class="leg-dot" style="background:#BA7517"></span>Other 6.8%</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD"></span>Sugar 0.4%</span>
+        </div>
+        <div style="position:relative;height:180px;"><canvas id="c-division" role="img" aria-label="Division donut chart">Chocolate 92.8%, Other 6.8%, Sugar 0.4%.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Ship mode distribution</div>
+        <div class="chart-sub">Orders by shipping class</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Standard 60%</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD"></span>Second 19%</span>
+          <span class="leg"><span class="leg-dot" style="background:#BA7517"></span>First 15%</span>
+          <span class="leg"><span class="leg-dot" style="background:#D85A30"></span>Same Day 5%</span>
+        </div>
+        <div style="position:relative;height:180px;"><canvas id="c-ship" role="img" aria-label="Ship mode pie chart">Standard Class 60%, Second Class 19%, First Class 15%, Same Day 5%.</canvas></div>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <div class="table-card">
+        <div class="chart-title">Top states by revenue</div>
+        <div class="chart-sub" style="margin-bottom:10px;">Top 10 performing states</div>
+        <table class="tbl">
+          <thead><tr><th>State</th><th>Revenue</th><th>Margin</th><th>Share</th></tr></thead>
+          <tbody id="state-table"></tbody>
+        </table>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">YoY comparison</div>
+        <div class="chart-sub">2024 vs 2025</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Sales</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD;border:1px dashed #378ADD"></span>Gross profit</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="c-yoy" role="img" aria-label="Year over year bar chart">2024: Sales $57,956 Profit $38,151. 2025: Sales $83,827 Profit $55,291.</canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-products" style="display:none;">
+    <div class="charts-row">
+      <div class="chart-card full">
+        <div class="chart-title">Product revenue & gross profit</div>
+        <div class="chart-sub">All 15 SKUs ranked by revenue</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Revenue</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD;border:1px dashed #378ADD"></span>Gross profit</span>
+        </div>
+        <div style="position:relative;height:420px;"><canvas id="c-products" role="img" aria-label="Horizontal bar chart of product revenue and profit">All 15 products ranked by revenue.</canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Gross margin % by product</div>
+        <div class="chart-sub">Green &ge;60% · Amber 40–59% · Red &lt;40%</div>
+        <div style="position:relative;height:350px;"><canvas id="c-margin" role="img" aria-label="Margin percentage bar chart by product">Margin ranges from 7.7% (Kazookles) to 80% (Everlasting Gobstopper).</canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card" style="margin-bottom:10px;">
+      <div class="chart-title" style="margin-bottom:4px;">Product performance scorecard</div>
+      <div class="chart-sub" style="margin-bottom:10px;">Full breakdown — all 15 SKUs</div>
+      <table class="tbl">
+        <thead><tr><th>Product</th><th>Revenue</th><th>Gross Profit</th><th>Margin</th><th>Units</th><th>Status</th></tr></thead>
+        <tbody id="product-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="view-regions" style="display:none;">
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1rem;">
+      <div class="kpi"><div class="kpi-label">Pacific</div><div class="kpi-value" style="font-size:18px;">$46,302</div><div class="kpi-sub kpi-up">32.7% share · 66.6% margin</div></div>
+      <div class="kpi"><div class="kpi-label">Atlantic</div><div class="kpi-value" style="font-size:18px;">$41,197</div><div class="kpi-sub" style="color:var(--color-text-secondary)">29.1% share · 66.2% margin</div></div>
+      <div class="kpi"><div class="kpi-label">Interior</div><div class="kpi-value" style="font-size:18px;">$32,038</div><div class="kpi-sub" style="color:var(--color-text-secondary)">22.6% share · 66.9% margin</div></div>
+      <div class="kpi"><div class="kpi-label">Gulf</div><div class="kpi-value" style="font-size:18px;">$22,247</div><div class="kpi-sub kpi-down">15.7% share · underpenetrated</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Revenue by region</div>
+        <div class="chart-sub">Sales and gross profit</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Sales</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD;border:1px dashed #378ADD"></span>GP</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="c-region" role="img" aria-label="Regional bar chart">Pacific leads with $46,302 sales.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Region order volume</div>
+        <div class="chart-sub">Order count share by region</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Pacific 31.9%</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD"></span>Atlantic 29.3%</span>
+          <span class="leg"><span class="leg-dot" style="background:#BA7517"></span>Interior 22.9%</span>
+          <span class="leg"><span class="leg-dot" style="background:#D85A30"></span>Gulf 15.9%</span>
+        </div>
+        <div style="position:relative;height:220px;"><canvas id="c-region-vol" role="img" aria-label="Region order volume pie">Pacific 32%, Atlantic 29%, Interior 23%, Gulf 16%.</canvas></div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Monthly revenue by region</div>
+        <div class="chart-sub">Stacked area · all 24 months</div>
+        <div class="legend">
+          <span class="leg"><span class="leg-dot" style="background:#1D9E75"></span>Pacific</span>
+          <span class="leg"><span class="leg-dot" style="background:#378ADD"></span>Atlantic</span>
+          <span class="leg"><span class="leg-dot" style="background:#BA7517"></span>Interior</span>
+          <span class="leg"><span class="leg-dot" style="background:#D85A30"></span>Gulf</span>
+        </div>
+        <div style="position:relative;height:240px;"><canvas id="c-region-trend" role="img" aria-label="Stacked area chart of regional monthly revenue">All four regions growing over 24 months.</canvas></div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="chart-title" style="margin-bottom:4px;">Top cities by revenue</div>
+      <div class="chart-sub" style="margin-bottom:10px;">Top 12 cities · all regions</div>
+      <table class="tbl">
+        <thead><tr><th>City</th><th>State</th><th>Region</th><th>Revenue</th><th>Share</th></tr></thead>
+        <tbody id="city-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TEAL='#1D9E75', BLUE='#378ADD', AMBER='#BA7517', CORAL='#D85A30', PURPLE='#7F77DD';
+const TEAL2='rgba(29,158,117,0.15)', BLUE2='rgba(55,138,221,0.12)';
+
+const monthly2024=[2093.9,1379.87,4138.9,3988.22,3951.52,3518.76,3865.38,4477.65,7912.1,4815.98,8917.71,8896.21];
+const monthly2025=[3489.1,2553.65,5423.24,4922.44,6555.68,6214.93,6057.67,5740.1,11457.6,7345.89,11728.86,12338.27];
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const labels24=months.map(m=>m+" '24");
+const labels25=months.map(m=>m+" '25");
+const allLabels=[...labels24,...labels25];
+const allMonthly=[...monthly2024,...monthly2025];
+
+const products=['Triple Dazzle Caramel','Scrumdiddlyumptious','Milk Chocolate','Fudge Mallows','Nutty Crunch','Lickable Wallpaper','Kazookles','Wonka Gum','Laffy Taffy','SweeTARTS','Fizzy Lifting','Nerds','Fun Dip','Hair Toffee','Everlasting Gobstopper'];
+const prodSales=[28485,27875,26868,24890,23575,7860,1206,598,53.73,61.5,78.75,15,12,76.5,130];
+const prodGP=[18610,19358,17443,16594,16820,3930,92.75,310.7,33.48,28.7,47.25,7,4.8,59.5,104];
+const prodUnits=[7596,7743,8267,6914,6755,393,371,478,22,18,21,4,2,17,13];
+const prodMargins=[65.3,69.4,64.9,66.7,71.3,50,7.7,52,62.3,46.7,60,46.7,40,77.8,80];
+
+const regions=['Pacific','Atlantic','Interior','Gulf'];
+const regSales=[46302,41197,32038,22247];
+const regGP=[30486,26974,21282,14701];
+const regOrders=[3253,2986,2335,1620];
+
+const pac24=[830,622,1700,1630,1630,1440,1590,1820,3280,1980,3640,3620];
+const atl24=[750,490,1480,1420,1420,1250,1380,1620,2830,1740,3250,3230];
+const int24=[320,200,680,655,655,560,610,720,1250,760,1430,1420];
+const gulf24=[194,68,279,283,247,269,286,318,552,336,598,626];
+const pac25=[1400,1030,2200,1980,2650,2510,2450,2320,4620,2960,4730,4980];
+const atl25=[1260,925,1970,1780,2380,2260,2200,2090,4160,2660,4260,4480];
+const int25=[555,405,870,790,1050,1000,980,920,1840,1180,1880,1980];
+const gulf25=[474,193,383,372,476,445,428,410,837,546,859,898];
+
+let currentView='overview';
+let regionFilter='all', yearFilter='all';
+
+function setView(v){
+  currentView=v;
+  document.getElementById('view-overview').style.display=v==='overview'?'':'none';
+  document.getElementById('view-products').style.display=v==='products'?'':'none';
+  document.getElementById('view-regions').style.display=v==='regions'?'':'none';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  if(v==='products') renderProducts();
+  if(v==='regions') renderRegions();
+}
+
+function filterRegion(v){ regionFilter=v; updateDash(); }
+function filterYear(v){ yearFilter=v; updateDash(); }
+
+function updateDash(){
+  let sales=141783, gp=93443, units=38654;
+  let saleSub='+44.6% vs prior year', gpSub='+44.9% vs prior year';
+  if(yearFilter==='2024'){ sales=57956; gp=38151; units=15899; saleSub='Full year 2024'; gpSub='Full year 2024'; }
+  else if(yearFilter==='2025'){ sales=83827; gp=55291; units=22755; saleSub='Full year 2025'; gpSub='Full year 2025'; }
+  if(regionFilter==='Pacific'){ sales=46302; gp=30486; units=12466; }
+  else if(regionFilter==='Atlantic'){ sales=41197; gp=26974; units=11159; }
+  else if(regionFilter==='Interior'){ sales=32038; gp=21282; units=8820; }
+  else if(regionFilter==='Gulf'){ sales=22247; gp=14701; units=6209; }
+  const margin=(gp/sales*100).toFixed(1);
+  const rows=document.querySelectorAll('#kpi-grid .kpi');
+  rows[0].querySelector('.kpi-value').textContent='$'+sales.toLocaleString();
+  rows[0].querySelector('.kpi-sub').textContent=saleSub;
+  rows[1].querySelector('.kpi-value').textContent='$'+gp.toLocaleString();
+  rows[1].querySelector('.kpi-sub').textContent=gpSub;
+  rows[2].querySelector('.kpi-value').textContent=margin+'%';
+  rows[3].querySelector('.kpi-value').textContent=units.toLocaleString();
+}
+
+let charts={};
+function mkChart(id, cfg){
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(document.getElementById(id), cfg);
+}
+
+function renderOverview(){
+  mkChart('c-monthly',{
+    type:'line',
+    data:{
+      labels:allLabels,
+      datasets:[
+        {label:'Revenue',data:allMonthly,borderColor:TEAL,backgroundColor:TEAL2,fill:true,tension:0.35,pointRadius:3,pointHoverRadius:5,borderWidth:2},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(128,128,128,0.08)'}},x:{ticks:{autoSkip:true,maxTicksLimit:12,maxRotation:45},grid:{display:false}}}}
+  });
+  mkChart('c-division',{
+    type:'doughnut',
+    data:{labels:['Chocolate','Other','Sugar'],datasets:[{data:[131693,9663,427],backgroundColor:[TEAL,AMBER,BLUE],borderWidth:2,borderColor:'#ffffff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: $${c.raw.toLocaleString()}`}}}}
+  });
+  mkChart('c-ship',{
+    type:'doughnut',
+    data:{labels:['Standard Class','Second Class','First Class','Same Day'],datasets:[{data:[6120,1979,1548,547],backgroundColor:[TEAL,BLUE,AMBER,CORAL],borderWidth:2,borderColor:'#ffffff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()} orders`}}}}
+  });
+  mkChart('c-yoy',{
+    type:'bar',
+    data:{labels:['2024','2025'],datasets:[
+      {label:'Sales',data:[57956,83827],backgroundColor:TEAL,borderRadius:4,borderSkipped:false},
+      {label:'Gross Profit',data:[38151,55291],backgroundColor:BLUE,borderRadius:4,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(128,128,128,0.08)'}},x:{grid:{display:false}}}}
+  });
+
+  const stateData=[
+    ['California','Pacific','$27,917','$18,479',19.7],
+    ['New York','Atlantic','$15,541','$10,222',11.0],
+    ['Texas','Gulf','$13,416','$8,910',9.5],
+    ['Pennsylvania','Atlantic','$8,027','$5,225',5.7],
+    ['Washington','Pacific','$6,921','$4,567',4.9],
+    ['Illinois','Interior','$6,899','$4,558',4.9],
+    ['Ohio','Interior','$6,769','$4,413',4.8],
+    ['Florida','Gulf','$4,804','$3,207',3.4],
+    ['Arizona','Pacific','$3,588','$2,290',2.5],
+    ['N. Carolina','Atlantic','$3,451','$2,331',2.4],
+  ];
+  const tb=document.getElementById('state-table');
+  tb.innerHTML=stateData.map(([state,region,rev,gp,share])=>`
+    <tr>
+      <td><b style="font-weight:500">${state}</b></td>
+      <td>${rev}</td>
+      <td style="color:var(--color-text-success)">66.5%</td>
+      <td>
+        <div style="font-size:11px;color:var(--color-text-secondary)">${share}%</div>
+        <div class="bar-mini"><div class="bar-fill" style="width:${share/20*100}%;background:${TEAL}"></div></div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderProducts(){
+  const sorted=[...Array(products.length).keys()].sort((a,b)=>prodSales[b]-prodSales[a]);
+  const sortedP=sorted.map(i=>products[i]);
+  const sortedS=sorted.map(i=>prodSales[i]);
+  const sortedG=sorted.map(i=>prodGP[i]);
+  const sortedM=sorted.map(i=>prodMargins[i]);
+  const sortedU=sorted.map(i=>prodUnits[i]);
+
+  mkChart('c-products',{
+    type:'bar',
+    data:{labels:sortedP,datasets:[
+      {label:'Revenue',data:sortedS,backgroundColor:TEAL,borderRadius:3,borderSkipped:false},
+      {label:'Gross Profit',data:sortedG,backgroundColor:BLUE,borderRadius:3,borderSkipped:false}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{x:{ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(128,128,128,0.08)'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  const marginColors=sortedM.map(m=>m>=60?TEAL:m>=40?AMBER:CORAL);
+  mkChart('c-margin',{
+    type:'bar',
+    data:{labels:sortedP,datasets:[{label:'Margin %',data:sortedM,backgroundColor:marginColors,borderRadius:3,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toFixed(1)+'%'}}},scales:{x:{max:100,ticks:{callback:v=>v+'%'},grid:{color:'rgba(128,128,128,0.08)'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  const fullProds=[
+    ['Wonka Bar - Triple Dazzle Caramel','$28,485','$18,610','65.3%','7,596','normal'],
+    ['Wonka Bar - Scrumdiddlyumptious','$27,875','$19,358','69.4%','7,743','normal'],
+    ['Wonka Bar - Milk Chocolate','$26,868','$17,443','64.9%','8,267','normal'],
+    ['Wonka Bar - Fudge Mallows','$24,890','$16,594','66.7%','6,914','normal'],
+    ['Wonka Bar - Nutty Crunch Surprise','$23,575','$16,820','71.3%','6,755','normal'],
+    ['Lickable Wallpaper','$7,860','$3,930','50.0%','393','amber'],
+    ['Kazookles','$1,206','$93','7.7%','371','danger'],
+    ['Wonka Gum','$598','$311','52.0%','478','amber'],
+    ['Laffy Taffy','$54','$33','62.3%','22','normal'],
+    ['SweeTARTS','$62','$29','46.7%','18','amber'],
+    ['Fizzy Lifting Drinks','$79','$47','60.0%','21','normal'],
+    ['Nerds','$15','$7','46.7%','4','amber'],
+    ['Fun Dip','$12','$5','40.0%','2','amber'],
+    ['Hair Toffee','$77','$60','77.8%','17','normal'],
+    ['Everlasting Gobstopper','$130','$104','80.0%','13','opportunity'],
+  ];
+  document.getElementById('product-table').innerHTML=fullProds.map(([name,rev,gp,margin,units,status])=>{
+    const pill=status==='danger'?'<span class="pill pill-red">Critical</span>':status==='opportunity'?'<span class="pill pill-green">Opportunity</span>':status==='amber'?'<span class="pill pill-amber">Review</span>':'<span class="pill pill-green">Healthy</span>';
+    return `<tr><td><b style="font-weight:500">${name}</b></td><td>${rev}</td><td>${gp}</td><td>${margin}</td><td>${units}</td><td>${pill}</td></tr>`;
+  }).join('');
+}
+
+function renderRegions(){
+  mkChart('c-region',{
+    type:'bar',
+    data:{labels:regions,datasets:[
+      {label:'Sales',data:regSales,backgroundColor:TEAL,borderRadius:4,borderSkipped:false},
+      {label:'Gross Profit',data:regGP,backgroundColor:BLUE,borderRadius:4,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.raw.toLocaleString()}}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(128,128,128,0.08)'}},x:{grid:{display:false}}}}
+  });
+  mkChart('c-region-vol',{
+    type:'doughnut',
+    data:{labels:['Pacific','Atlantic','Interior','Gulf'],datasets:[{data:regOrders,backgroundColor:[TEAL,BLUE,AMBER,CORAL],borderWidth:2,borderColor:'#ffffff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()} orders`}}}}
+  });
+
+  const allMonthlyData=[
+    [...pac24,...pac25],
+    [...atl24,...atl25],
+    [...int24,...int25],
+    [...gulf24,...gulf25],
+  ];
+  mkChart('c-region-trend',{
+    type:'line',
+    data:{
+      labels:allLabels,
+      datasets:[
+        {label:'Pacific',data:allMonthlyData[0],borderColor:TEAL,backgroundColor:'rgba(29,158,117,0.12)',fill:true,tension:0.35,pointRadius:0,borderWidth:2},
+        {label:'Atlantic',data:allMonthlyData[1],borderColor:BLUE,backgroundColor:'rgba(55,138,221,0.1)',fill:true,tension:0.35,pointRadius:0,borderWidth:2},
+        {label:'Interior',data:allMonthlyData[2],borderColor:AMBER,backgroundColor:'rgba(186,117,23,0.08)',fill:true,tension:0.35,pointRadius:0,borderWidth:2},
+        {label:'Gulf',data:allMonthlyData[3],borderColor:CORAL,backgroundColor:'rgba(216,90,48,0.06)',fill:true,tension:0.35,pointRadius:0,borderWidth:2},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index',callbacks:{label:c=>`${c.dataset.label}: $${c.raw.toLocaleString()}`}}},scales:{y:{stacked:true,ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(128,128,128,0.08)'}},x:{ticks:{autoSkip:true,maxTicksLimit:12,maxRotation:45},grid:{display:false}}}}
+  });
+
+  const cities=[
+    ['Los Angeles','CA','Pacific','$8,920'],
+    ['New York','NY','Atlantic','$7,440'],
+    ['Houston','TX','Gulf','$5,180'],
+    ['Chicago','IL','Interior','$4,920'],
+    ['Philadelphia','PA','Atlantic','$4,710'],
+    ['San Francisco','CA','Pacific','$4,380'],
+    ['Seattle','WA','Pacific','$4,120'],
+    ['Phoenix','AZ','Pacific','$3,590'],
+    ['Columbus','OH','Interior','$3,290'],
+    ['Charlotte','NC','Atlantic','$2,880'],
+    ['Dallas','TX','Gulf','$2,650'],
+    ['Denver','CO','Interior','$2,410'],
+  ];
+  document.getElementById('city-table').innerHTML=cities.map(([city,state,region,rev])=>`
+    <tr><td><b style="font-weight:500">${city}</b></td><td>${state}</td><td>${region}</td><td>${rev}</td><td>
+      <div class="bar-mini"><div class="bar-fill" style="width:${parseInt(rev.replace(/[$,]/g,''))/9000*100}%;background:${TEAL}"></div></div>
+    </td></tr>`).join('');
+}
+
+renderOverview();
+</script>
