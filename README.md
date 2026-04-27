@@ -74,9 +74,8 @@ Jupyter Notebook — interactive analysis and dashboard
 HTML, CSS, and Chart.js — live interactive web dashboard
 
 links 
-link for dashboard:
+link for dashboard:https://github.com/Aditibhatia01/Nassau-Candy-Distributor-Data-Analytics-Project/blob/main/Dashboard.png
 
-link for summary:
 
 link for EDA research paper:https://github.com/Aditibhatia01/Nassau-Candy-Distributor-Data-Analytics-Project/blob/main/Nassau_Candy_EDA_Report%20(1).pdf
 
