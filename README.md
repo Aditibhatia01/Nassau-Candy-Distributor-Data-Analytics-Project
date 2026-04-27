@@ -1,5 +1,6 @@
 # Nassau-Candy-Distributor-Data-Analytics-Project
 Objective
+
 The goal of this project was to perform an end-to-end exploratory data analysis (EDA)
 on the sales and distribution records of Nassau Candy Distributor, a U.S.-based
 confectionery company. The analysis covers two full fiscal years — January 2024 to
